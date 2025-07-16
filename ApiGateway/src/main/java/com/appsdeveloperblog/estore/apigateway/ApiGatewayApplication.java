@@ -1,7 +1,8 @@
-package com.appsdeveloperblog.estore.apigateway;
+package com.appsdeveloperblog.estore.ApiGateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @EnableDiscoveryClient
 @SpringBootApplication
