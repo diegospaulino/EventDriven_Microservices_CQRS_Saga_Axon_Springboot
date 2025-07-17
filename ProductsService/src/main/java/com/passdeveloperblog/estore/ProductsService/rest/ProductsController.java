@@ -2,6 +2,7 @@ package com.passdeveloperblog.estore.ProductsService.rest;
 
 import java.util.UUID;
 
+import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,8 +20,19 @@ import com.passdeveloperblog.estore.ProductsService.command.CreateProductCommand
 public class ProductsController {
 
     //Variável para acessar, não somente as variáveis de ambiente do projeto, como também suas propriedades de configuração
+    /*@Autowired
+    *private Environment environment;
+    */
+
+    private final Environment environment;
+    private final CommandGateway commandGateway;
+
     @Autowired
-    private Environment environment;
+    //Construtor para injeção de dependência do Spring
+    public ProductsController(Environment environment, CommandGateway commandGateway) {
+        this.environment = environment;
+        this.commandGateway = commandGateway;
+    }
 
     @PostMapping
     public String createProduct(@RequestBody CreateProductsRestModel createProductsRestModel){
@@ -32,8 +44,15 @@ public class ProductsController {
             .productId(UUID.randomUUID().toString())
             .build();
 
-
-        return "HTTP POST Handled - Title is " + createProductsRestModel.getTitle();
+        String returnedValue;
+        
+        try {
+            returnedValue = commandGateway.sendAndWait(createProductCommand).toString();
+        } catch (Exception e) {
+            returnedValue = e.getLocalizedMessage();
+        }
+        
+        return returnedValue;
     }
 
     @GetMapping
