@@ -1,4 +1,4 @@
-package com.passdeveloperblog.estore.ProductsService.rest;
+package com.passdeveloperblog.estore.ProductsService.command.rest;
 
 import java.util.UUID;
 
@@ -17,7 +17,7 @@ import com.passdeveloperblog.estore.ProductsService.command.CreateProductCommand
 
 @RestController
 @RequestMapping("/products") //http://localhost:8080/products
-public class ProductsController {
+public class ProductsCommandController {
 
     //Variável para acessar, não somente as variáveis de ambiente do projeto, como também suas propriedades de configuração
     /*@Autowired
@@ -29,7 +29,7 @@ public class ProductsController {
 
     @Autowired
     //Construtor para injeção de dependência do Spring
-    public ProductsController(Environment environment, CommandGateway commandGateway) {
+    public ProductsCommandController(Environment environment, CommandGateway commandGateway) {
         this.environment = environment;
         this.commandGateway = commandGateway;
     }
