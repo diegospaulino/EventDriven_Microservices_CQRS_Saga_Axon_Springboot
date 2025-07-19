@@ -1,5 +1,6 @@
 package com.passdeveloperblog.estore.ProductsService.query;
 
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,7 @@ import com.passdeveloperblog.estore.ProductsService.core.data.ProductsRepository
 import com.passdeveloperblog.estore.ProductsService.core.events.ProductCreatedEvent;
 
 @Component
+@ProcessingGroup("product-group")
 public class ProductsEventsHandler {
 
     private final ProductsRepository productsRepository;
