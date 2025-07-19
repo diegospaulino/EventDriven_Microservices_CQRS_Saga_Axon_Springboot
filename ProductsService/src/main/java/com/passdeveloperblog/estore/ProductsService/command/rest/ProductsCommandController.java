@@ -21,6 +21,7 @@ public class ProductsCommandController {
     *private Environment environment;
     */
 
+    @SuppressWarnings("unused")
     private final Environment environment;
     private final CommandGateway commandGateway;
 
