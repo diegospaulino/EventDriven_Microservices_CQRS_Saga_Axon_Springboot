@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.passdeveloperblog.estore.ProductsService.command.CreateProductCommand;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/products") //http://localhost:8080/products
 public class ProductsCommandController {
@@ -21,6 +23,7 @@ public class ProductsCommandController {
     *private Environment environment;
     */
 
+    @SuppressWarnings("unused")
     private final Environment environment;
     private final CommandGateway commandGateway;
 
@@ -32,7 +35,7 @@ public class ProductsCommandController {
     }
 
     @PostMapping
-    public String createProduct(@RequestBody CreateProductsRestModel createProductsRestModel){
+    public String createProduct(@Valid @RequestBody CreateProductsRestModel createProductsRestModel){
 
         CreateProductCommand createProductCommand = CreateProductCommand.builder()
             .price(createProductsRestModel.getPrice())
