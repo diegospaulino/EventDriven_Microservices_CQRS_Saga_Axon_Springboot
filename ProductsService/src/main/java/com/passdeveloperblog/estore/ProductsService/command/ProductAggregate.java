@@ -31,7 +31,7 @@ public class ProductAggregate {
     }
 
     @CommandHandler
-    public ProductAggregate(CreateProductCommand createProductCommand) throws Exception {
+    public ProductAggregate(CreateProductCommand createProductCommand) {
         //Valida Create Product Command
         
         if(createProductCommand.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
@@ -50,10 +50,6 @@ public class ProductAggregate {
         //Dispara para os diferentes eventos desse aggregate um evento 
         //informado que o estado desse aggregate pode ser atualizado com novas informações
         AggregateLifecycle.apply(productCreatedEvent);
-
-        if(true){
-            throw new Exception("Aconteceu um erro ao invocar CreateProductCommand na classe ProductAggregate anotada com @CommandHandler");
-        }
     }
 
     @EventSourcingHandler

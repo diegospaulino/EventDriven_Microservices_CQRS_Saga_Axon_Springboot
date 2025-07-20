@@ -21,9 +21,9 @@ public class ProductsEventsHandler {
     }
 
     @ExceptionHandler(resultType = Exception.class)
-    public void handleGeneralException(Exception e) {
+    public void handleGeneralException(Exception e) throws Exception {
         // This method can be used to handle specific exceptions if needed
-        //Log error message
+        throw e;
     }
 
     @ExceptionHandler(resultType = IllegalArgumentException.class)
@@ -33,7 +33,7 @@ public class ProductsEventsHandler {
     }
 
     @EventHandler
-    public void on(ProductCreatedEvent event) {
+    public void on(ProductCreatedEvent event) throws Exception{
         // Handle the product creation event
         // This method can be used to update read models or perform other actions
         System.out.println("====================================================");
@@ -47,6 +47,10 @@ public class ProductsEventsHandler {
             productsRepository.save(productEntity);
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
+        }
+
+        if(true){
+            throw new Exception("Forçando a chamada de exceção na classe de Events Handler");
         }
         
     }
