@@ -1,5 +1,8 @@
 package com.passdeveloperblog.estore.ProductsService.core.errorhandling;
 
+import java.util.Date;
+
+import org.axonframework.commandhandling.CommandExecutionException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,14 +17,28 @@ public class ProductsServiceErrorHandler {
     public ResponseEntity<Object> handleIllegalStateException(IllegalStateException ex, WebRequest request) {
         // Log the exception and return a generic error response
         // This is a placeholder implementation
-        return new ResponseEntity<>(ex.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+        ErrorMessage errorMessage = new ErrorMessage(new Date(), ex.getMessage());
+
+        return new ResponseEntity<>(errorMessage, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(value = {Exception.class})
     public ResponseEntity<Object> handleOtherExceptions(Exception ex, WebRequest request) {
         // Log the exception and return a generic error response
         // This is a placeholder implementation
-        return new ResponseEntity<>(ex.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+        ErrorMessage errorMessage = new ErrorMessage(new Date(), ex.getMessage());
+        return new ResponseEntity<>(errorMessage, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(value = {CommandExecutionException.class})
+    public ResponseEntity<Object> handleCommandExecutionExceptions(CommandExecutionException ex, WebRequest request) {
+        // Log the exception and return a generic error response
+        // This is a placeholder implementation
+
+        ErrorMessage errorMessage = new ErrorMessage(new Date(), ex.getMessage());
+        return new ResponseEntity<>(errorMessage, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }
