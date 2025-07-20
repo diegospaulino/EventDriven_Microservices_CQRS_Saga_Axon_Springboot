@@ -45,12 +45,14 @@ public class ProductsCommandController {
             .build();
 
         String returnedValue;
+
+        returnedValue = commandGateway.sendAndWait(createProductCommand).toString();
         
-        try {
-            returnedValue = commandGateway.sendAndWait(createProductCommand).toString();
-        } catch (Exception e) {
-            returnedValue = e.getLocalizedMessage();
-        }
+        // try {
+        //     returnedValue = commandGateway.sendAndWait(createProductCommand).toString();
+        // } catch (Exception e) {
+        //     returnedValue = e.getLocalizedMessage();
+        // }
         
         return returnedValue;
     }
