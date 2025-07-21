@@ -9,16 +9,21 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.spring.stereotype.Saga;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.appsdeveloperblog.estore.OrdersService.core.events.OrderCreatedEvent;
 import com.appsdeveloperblog.estore.core.commands.ReserveProductCommand;
+import com.appsdeveloperblog.estore.core.events.ProductReservedEvent;
 
 @Saga
 public class OrderSaga {
 
     @Autowired
     private transient CommandGateway commandGateway;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderSaga.class);
 
     @StartSaga
     @SagaEventHandler(associationProperty = "orderId")
@@ -30,6 +35,9 @@ public class OrderSaga {
                 .orderId(orderCreatedEvent.getOrderId())
                 .userId(orderCreatedEvent.getUserId())
                 .build();
+        
+        LOGGER.info("OrderCreatedEvent criado para orderId: " + reserveProductCommand.getOrderId() + 
+                    " and productId: " + reserveProductCommand.getProductId());
 
         commandGateway.send(reserveProductCommand, new CommandCallback<ReserveProductCommand, Object>() {
 
@@ -42,5 +50,16 @@ public class OrderSaga {
             }
 
         }); 
+    }
+
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(ProductReservedEvent productReservedEvent) {
+        // Esse método pode ser usado para lidar com o evento de produto reservado
+        // e atualizar o estado do saga, se necessário.
+        // Por exemplo, você pode confirmar a reserva do produto ou iniciar outras ações.
+        // Método para processar com o pagamento do usuário.
+
+        LOGGER.info("ProductReservedEvent foi chamado para o produto com productId: " + productReservedEvent.getProductId() + 
+                    " e orderId: " + productReservedEvent.getOrderId());
     }
 }
