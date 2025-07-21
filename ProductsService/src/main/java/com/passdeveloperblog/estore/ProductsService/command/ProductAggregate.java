@@ -9,6 +9,7 @@ import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
 import org.springframework.beans.BeanUtils;
 
+import com.appsdeveloperblog.estore.core.commands.ReserveProductCommand;
 import com.passdeveloperblog.estore.ProductsService.core.events.ProductCreatedEvent;
 
 @Aggregate
@@ -23,7 +24,6 @@ public class ProductAggregate {
     @SuppressWarnings("unused")
     private BigDecimal price;
     
-    @SuppressWarnings("unused")
     private Integer quantity;
 
     public ProductAggregate() {
@@ -50,6 +50,14 @@ public class ProductAggregate {
         //Dispara para os diferentes eventos desse aggregate um evento 
         //informado que o estado desse aggregate pode ser atualizado com novas informações
         AggregateLifecycle.apply(productCreatedEvent);
+    }
+
+    @CommandHandler
+    public void handle(ReserveProductCommand reserveProductCommand) {
+
+        if(quantity < reserveProductCommand.getQuantity()) {
+            throw new IllegalArgumentException("Quantidade solicitada é maior que a quantidade disponível em estoque!");
+        }
     }
 
     @EventSourcingHandler

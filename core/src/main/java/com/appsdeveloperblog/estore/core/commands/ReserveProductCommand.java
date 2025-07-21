@@ -11,8 +11,8 @@ public class ReserveProductCommand {
 
     @TargetAggregateIdentifier
     private final String productId;
-    
-    private final String quantity;
+
+    private final Integer quantity;
     private final String orderId;
     private final String userId;
 }
