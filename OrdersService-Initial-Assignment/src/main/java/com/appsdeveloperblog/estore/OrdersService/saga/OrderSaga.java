@@ -10,6 +10,7 @@ import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.commandhandling.CommandResultMessage;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
+import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.queryhandling.QueryGateway;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.appsdeveloperblog.estore.OrdersService.command.commands.ApproveOrderCommand;
+import com.appsdeveloperblog.estore.OrdersService.core.events.OrderApprovedEvent;
 import com.appsdeveloperblog.estore.OrdersService.core.events.OrderCreatedEvent;
 import com.appsdeveloperblog.estore.core.User;
 import com.appsdeveloperblog.estore.core.commands.ProcessPaymentCommand;
@@ -134,9 +136,27 @@ public class OrderSaga {
         
         ApproveOrderCommand approveOrderCommand = new ApproveOrderCommand(paymentProcessedEvent.getOrderId());
         commandGateway.send(approveOrderCommand);
+
+        // Finaliza o saga
+        //SagaLifecycle.end();
+
+    }
+
+    @EndSaga
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(OrderApprovedEvent orderApprovedEvent) {
+        // Esse método pode ser usado para lidar com o evento de pedido aprovado
+        // e atualizar o estado do saga, se necessário.
+        // Por exemplo, você pode confirmar a aprovação do pedido ou iniciar outras ações.
+
+        LOGGER.info("OrderApprovedEvent foi chamado para o pedido com ID: " + orderApprovedEvent.getOrderId());
+
+        // Aqui você pode adicionar lógica adicional para lidar com o pedido aprovado,
+        // como notificar outros serviços ou atualizar o status do pedido.
         
         // Finaliza o saga
         //SagaLifecycle.end();
 
     }
+
 }
