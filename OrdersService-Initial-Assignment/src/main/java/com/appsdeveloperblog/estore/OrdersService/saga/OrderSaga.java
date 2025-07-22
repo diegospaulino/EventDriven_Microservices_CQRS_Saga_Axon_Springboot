@@ -18,10 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.appsdeveloperblog.estore.OrdersService.command.commands.ApproveOrderCommand;
 import com.appsdeveloperblog.estore.OrdersService.core.events.OrderCreatedEvent;
 import com.appsdeveloperblog.estore.core.User;
 import com.appsdeveloperblog.estore.core.commands.ProcessPaymentCommand;
 import com.appsdeveloperblog.estore.core.commands.ReserveProductCommand;
+import com.appsdeveloperblog.estore.core.events.PaymentProcessedEvent;
 import com.appsdeveloperblog.estore.core.events.ProductReservedEvent;
 import com.appsdeveloperblog.estore.core.query.FetchUserPaymentDetailsQuery;
 
@@ -116,5 +118,25 @@ public class OrderSaga {
             // Start a compensating transaction here if needed
         }
         
+    }
+
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(PaymentProcessedEvent paymentProcessedEvent) {
+        // Esse método pode ser usado para lidar com o evento de pagamento processado
+        // e atualizar o estado do saga, se necessário.
+        // Por exemplo, você pode confirmar o pagamento ou iniciar outras ações.
+
+        LOGGER.info("PaymentProcessedEvent foi chamado para o orderId: " + paymentProcessedEvent.getOrderId() + 
+                    " e paymentId: " + paymentProcessedEvent.getPaymentId());
+
+        // Aqui você pode adicionar lógica adicional para lidar com o pagamento processado,
+        // como atualizar o status do pedido ou notificar outros serviços.
+        
+        ApproveOrderCommand approveOrderCommand = new ApproveOrderCommand(paymentProcessedEvent.getOrderId());
+        commandGateway.send(approveOrderCommand);
+        
+        // Finaliza o saga
+        //SagaLifecycle.end();
+
     }
 }

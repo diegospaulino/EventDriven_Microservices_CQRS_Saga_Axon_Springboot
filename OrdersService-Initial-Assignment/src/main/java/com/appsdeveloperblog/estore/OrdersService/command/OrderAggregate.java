@@ -7,6 +7,7 @@ package com.appsdeveloperblog.estore.OrdersService.command;
 
 import com.appsdeveloperblog.estore.OrdersService.core.events.OrderCreatedEvent;
 import com.appsdeveloperblog.estore.OrdersService.core.model.OrderStatus;
+import com.appsdeveloperblog.estore.OrdersService.command.commands.ApproveOrderCommand;
 import com.appsdeveloperblog.estore.OrdersService.command.commands.CreateOrderCommand;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
@@ -53,5 +54,11 @@ public class OrderAggregate {
         this.orderStatus = orderCreatedEvent.getOrderStatus();
     }
  
+    @CommandHandler
+    public void handle(ApproveOrderCommand approveOrderCommand) {
+        // Aqui você pode adicionar lógica adicional para lidar com a aprovação do pedido,
+        // como atualizar o status do pedido ou notificar outros serviços.
+        
+    }
 
 }
