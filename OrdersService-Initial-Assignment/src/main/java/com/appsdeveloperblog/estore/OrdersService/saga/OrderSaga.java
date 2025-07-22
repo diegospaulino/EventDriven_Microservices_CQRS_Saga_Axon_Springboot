@@ -1,5 +1,8 @@
 package com.appsdeveloperblog.estore.OrdersService.saga;
 
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import javax.annotation.Nonnull;
 
 import org.axonframework.commandhandling.CommandCallback;
@@ -17,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.appsdeveloperblog.estore.OrdersService.core.events.OrderCreatedEvent;
 import com.appsdeveloperblog.estore.core.User;
+import com.appsdeveloperblog.estore.core.commands.ProcessPaymentCommand;
 import com.appsdeveloperblog.estore.core.commands.ReserveProductCommand;
 import com.appsdeveloperblog.estore.core.events.ProductReservedEvent;
 import com.appsdeveloperblog.estore.core.query.FetchUserPaymentDetailsQuery;
@@ -89,6 +93,28 @@ public class OrderSaga {
         }
 
         LOGGER.info("O pagamento do usuário " + userPaymentDetails.getFirstName() + " foi encontrado com sucesso");
+
+        ProcessPaymentCommand processPaymentCommand = ProcessPaymentCommand.builder()
+                .paymentId(UUID.randomUUID().toString())
+                .orderId(productReservedEvent.getOrderId())
+                .paymentDetails(userPaymentDetails.getPaymentDetails())
+                .build();
+
+        String result = null;
+        
+        try {
+            result = commandGateway.sendAndWait(processPaymentCommand, 10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            LOGGER.error("Erro ao processar o pagamento: " + e.getMessage());
+
+            // Start a compensating transaction here if needed
+        }
+        
+        if(result == null) {
+            LOGGER.info("O pagamento não foi processado para o orderId: " + productReservedEvent.getOrderId() + 
+                        " e productId: " + productReservedEvent.getProductId());
+            // Start a compensating transaction here if needed
+        }
         
     }
 }
