@@ -1,5 +1,6 @@
 package com.appsdeveloperblog.estore.PaymentsService.command;
 
+import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
@@ -14,9 +15,13 @@ public class PaymentAggregate {
     @AggregateIdentifier
     private String paymentId;
 
-    @SuppressWarnings("unused")
     private String orderId;
 
+    public PaymentAggregate() {
+        // Default constructor required by Axon Framework
+    }
+
+    @CommandHandler
     public PaymentAggregate(ProcessPaymentCommand processPaymentCommand) {
         // Valida Process Payment Command
         if(processPaymentCommand.getPaymentDetails() == null) {

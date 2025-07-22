@@ -98,16 +98,16 @@ public class OrderSaga {
 
         LOGGER.info("O pagamento do usuário " + userPaymentDetails.getFirstName() + " foi encontrado com sucesso");
 
-        ProcessPaymentCommand processPaymentCommand = ProcessPaymentCommand.builder()
-                .paymentId(UUID.randomUUID().toString())
-                .orderId(productReservedEvent.getOrderId())
-                .paymentDetails(userPaymentDetails.getPaymentDetails())
-                .build();
+        ProcessPaymentCommand proccessPaymentCommand = ProcessPaymentCommand.builder()
+        		.orderId(productReservedEvent.getOrderId())
+        		.paymentDetails(userPaymentDetails.getPaymentDetails())
+        		.paymentId(UUID.randomUUID().toString())
+        		.build();
 
         String result = null;
         
         try {
-            result = commandGateway.sendAndWait(processPaymentCommand, 10, TimeUnit.SECONDS);
+            result = commandGateway.sendAndWait(proccessPaymentCommand, 10, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.error("Erro ao processar o pagamento: " + e.getMessage());
 
