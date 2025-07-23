@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.appsdeveloperblog.estore.ProductsService.core.data.ProductEntity;
 import com.appsdeveloperblog.estore.ProductsService.core.data.ProductsRepository;
 import com.appsdeveloperblog.estore.ProductsService.core.events.ProductCreatedEvent;
+import com.appsdeveloperblog.estore.core.events.ProductReservationCancelledEvent;
 import com.appsdeveloperblog.estore.core.events.ProductReservedEvent;
 
 @Component
@@ -64,5 +65,21 @@ public class ProductsEventsHandler {
         productsRepository.save(productEntity);
         LOGGER.info("ProductReservedEvent foi chamado para o produto com productId: " + productReservedEvent.getProductId() + 
                     " e orderId: " + productReservedEvent.getOrderId());
+    }
+
+    @EventHandler
+    public void on(ProductReservationCancelledEvent productReservationCancelledEvent) {
+        // Esse método é chamado quando o evento ProductReservationCancelledEvent é disparado
+        // O Axon Framework irá automaticamente chamar esse método para atualizar o estado do aggregate
+        // com as informações do evento recebido
+
+        ProductEntity currentlyStoredProduct = productsRepository.findByProductId(productReservationCancelledEvent.getProductId());
+        int newQuantity = currentlyStoredProduct.getQuantity() + productReservationCancelledEvent.getQuantity();
+        currentlyStoredProduct.setQuantity(newQuantity);
+
+        productsRepository.save(currentlyStoredProduct);
+        LOGGER.info("ProductReservationCancelledEvent foi chamado para o produto com productId: " + productReservationCancelledEvent.getProductId() + 
+                    " e orderId: " + productReservationCancelledEvent.getOrderId());
+        
     }
 }

@@ -14,8 +14,10 @@ import org.springframework.beans.BeanUtils;
 
 import com.appsdeveloperblog.estore.OrdersService.command.commands.ApproveOrderCommand;
 import com.appsdeveloperblog.estore.OrdersService.command.commands.CreateOrderCommand;
+import com.appsdeveloperblog.estore.OrdersService.command.commands.RejectOrderCommand;
 import com.appsdeveloperblog.estore.OrdersService.core.events.OrderApprovedEvent;
 import com.appsdeveloperblog.estore.OrdersService.core.events.OrderCreatedEvent;
+import com.appsdeveloperblog.estore.OrdersService.core.events.OrderRejectedEvent;
 import com.appsdeveloperblog.estore.OrdersService.core.model.OrderStatus;
 
 @Aggregate
@@ -74,6 +76,25 @@ public class OrderAggregate {
 
         this.orderStatus = orderApprovedEvent.getOrderStatus();
 
+    }
+
+    @CommandHandler
+    public void handle(RejectOrderCommand rejectOrderCommand) {
+        
+        OrderRejectedEvent orderRejectedEvent = new OrderRejectedEvent(
+                rejectOrderCommand.getOrderId(), 
+                rejectOrderCommand.getReason());
+
+        AggregateLifecycle.apply(orderRejectedEvent);
+    }
+
+    @EventSourcingHandler
+    public void on(OrderRejectedEvent orderRejectedEvent) {
+        // Esse método é chamado quando o evento OrderRejectedEvent é disparado
+        // O Axon Framework irá automaticamente chamar esse método para atualizar o estado do aggregate
+        // com as informações do evento recebido
+
+        this.orderStatus = orderRejectedEvent.getOrderStatus();
     }
 
 }

@@ -20,12 +20,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.appsdeveloperblog.estore.OrdersService.command.commands.ApproveOrderCommand;
+import com.appsdeveloperblog.estore.OrdersService.command.commands.RejectOrderCommand;
 import com.appsdeveloperblog.estore.OrdersService.core.events.OrderApprovedEvent;
 import com.appsdeveloperblog.estore.OrdersService.core.events.OrderCreatedEvent;
+import com.appsdeveloperblog.estore.OrdersService.core.events.OrderRejectedEvent;
 import com.appsdeveloperblog.estore.core.User;
+import com.appsdeveloperblog.estore.core.commands.CancelProductReservationCommand;
 import com.appsdeveloperblog.estore.core.commands.ProcessPaymentCommand;
 import com.appsdeveloperblog.estore.core.commands.ReserveProductCommand;
 import com.appsdeveloperblog.estore.core.events.PaymentProcessedEvent;
+import com.appsdeveloperblog.estore.core.events.ProductReservationCancelledEvent;
 import com.appsdeveloperblog.estore.core.events.ProductReservedEvent;
 import com.appsdeveloperblog.estore.core.query.FetchUserPaymentDetailsQuery;
 
@@ -86,12 +90,14 @@ public class OrderSaga {
             LOGGER.error("Erro ao buscar detalhes de pagamento do usuário: " + e.getMessage());
             
             // Start a compensating transaction here if needed
+            cancelProductReservation(productReservedEvent, e.getMessage());
             return;
         }
 
         if(userPaymentDetails == null || userPaymentDetails.getPaymentDetails() == null) {
             LOGGER.error("Detalhes de pagamento do usuário não encontrados para o userId: " + productReservedEvent.getUserId());
             // Start a compensating transaction here if needed
+            cancelProductReservation(productReservedEvent, "Não foi possível encontrar os detalhes do pagamento do usuário!");
             return;
 
         }
@@ -112,14 +118,30 @@ public class OrderSaga {
             LOGGER.error("Erro ao processar o pagamento: " + e.getMessage());
 
             // Start a compensating transaction here if needed
+            cancelProductReservation(productReservedEvent, e.getMessage());
+            return;
         }
         
         if(result == null) {
             LOGGER.info("O pagamento não foi processado para o orderId: " + productReservedEvent.getOrderId() + 
                         " e productId: " + productReservedEvent.getProductId());
             // Start a compensating transaction here if needed
+            cancelProductReservation(productReservedEvent, "Não foi possível processar o pagamento com as informações fornecidos!");
         }
         
+    }
+
+    private void cancelProductReservation(ProductReservedEvent productReservedEvent, String reason) {
+
+        CancelProductReservationCommand publishProductReservationCommand = CancelProductReservationCommand.builder()
+                .productId(productReservedEvent.getProductId())
+                .quantity(productReservedEvent.getQuantity())
+                .orderId(productReservedEvent.getOrderId())
+                .userId(productReservedEvent.getUserId())
+                .reason(reason)
+                .build();
+
+        commandGateway.send(publishProductReservationCommand);
     }
 
     @SagaEventHandler(associationProperty = "orderId")
@@ -157,6 +179,37 @@ public class OrderSaga {
         // Finaliza o saga
         //SagaLifecycle.end();
 
+    }
+
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(ProductReservationCancelledEvent productReservationCancelledEvent) {
+        // Esse método pode ser usado para lidar com o evento de cancelamento de reserva de produto
+        // e atualizar o estado do saga, se necessário.
+        // Por exemplo, você pode confirmar o cancelamento da reserva ou iniciar outras ações.
+
+        LOGGER.info("ProductReservationCancelledEvent foi chamado para o produto com productId: " + productReservationCancelledEvent.getProductId() + 
+                    " e orderId: " + productReservationCancelledEvent.getOrderId());
+
+        // Aqui você pode adicionar lógica adicional para lidar com o cancelamento da reserva,
+        // como notificar outros serviços ou atualizar o status do pedido.
+        
+        // Cria e envia um RejectOrderCommand para rejeitar o pedido
+        RejectOrderCommand rejectOrderCommand = new RejectOrderCommand(productReservationCancelledEvent.getOrderId(), 
+                "Reserva de produto cancelada: " + productReservationCancelledEvent.getReason());
+
+        commandGateway.send(rejectOrderCommand);
+        // Finaliza o saga
+        //SagaLifecycle.end();
+    }
+
+    @EndSaga
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(OrderRejectedEvent orderRejectedEvent) {
+        // Esse método pode ser usado para lidar com o evento de pedido rejeitado
+        // e atualizar o estado do saga, se necessário.
+        // Por exemplo, você pode confirmar a rejeição do pedido ou iniciar outras ações.
+
+        LOGGER.info("OrderRejectedEvent foi chamado com sucesso para o pedido com ID: " + orderRejectedEvent.getOrderId());
     }
 
 }

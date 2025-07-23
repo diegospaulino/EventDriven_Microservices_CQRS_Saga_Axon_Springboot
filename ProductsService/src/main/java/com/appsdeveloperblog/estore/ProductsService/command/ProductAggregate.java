@@ -10,7 +10,9 @@ import org.axonframework.spring.stereotype.Aggregate;
 import org.springframework.beans.BeanUtils;
 
 import com.appsdeveloperblog.estore.ProductsService.core.events.ProductCreatedEvent;
+import com.appsdeveloperblog.estore.core.commands.CancelProductReservationCommand;
 import com.appsdeveloperblog.estore.core.commands.ReserveProductCommand;
+import com.appsdeveloperblog.estore.core.events.ProductReservationCancelledEvent;
 import com.appsdeveloperblog.estore.core.events.ProductReservedEvent;
 
 @Aggregate
@@ -67,6 +69,33 @@ public class ProductAggregate {
                 .userId(reserveProductCommand.getUserId())
                 .build();
         AggregateLifecycle.apply(productReservedEvent);
+    }
+
+    @CommandHandler
+    public void handle(CancelProductReservationCommand cancelProductReservationCommand) {
+        //Esse método é chamado quando o comando CancelProductReservationCommand é disparado
+        //O Axon Framework irá automaticamente chamar esse método para atualizar o estado do aggregate
+        //com as informações do comando recebido
+
+        ProductReservationCancelledEvent productReservationCancelledEvent = ProductReservationCancelledEvent.builder()
+                .productId(cancelProductReservationCommand.getProductId())
+                .quantity(cancelProductReservationCommand.getQuantity())
+                .orderId(cancelProductReservationCommand.getOrderId())
+                .userId(cancelProductReservationCommand.getUserId())
+                .reason(cancelProductReservationCommand.getReason())
+                .build();
+
+        AggregateLifecycle.apply(productReservationCancelledEvent);
+
+    }
+
+    @EventSourcingHandler
+    public void on(ProductReservationCancelledEvent productReservationCancelledEvent) {
+        //Esse método é chamado quando o evento ProductReservationCancelledEvent é disparado
+        //O Axon Framework irá automaticamente chamar esse método para atualizar o estado do aggregate
+        //com as informações do evento recebido
+
+        this.quantity += productReservationCancelledEvent.getQuantity();
     }
 
     @EventSourcingHandler
