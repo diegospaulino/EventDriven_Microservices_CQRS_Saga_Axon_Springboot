@@ -1,7 +1,8 @@
 package com.appsdeveloperblog.estore.OrdersService.saga;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
@@ -9,6 +10,8 @@ import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.commandhandling.CommandResultMessage;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.deadline.DeadlineManager;
+import org.axonframework.deadline.annotation.DeadlineHandler;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
@@ -42,7 +45,14 @@ public class OrderSaga {
     @Autowired
     private transient QueryGateway queryGateway;
 
+    @Autowired
+    private transient DeadlineManager deadlineManager;
+
+    private final String PAYMENT_PROCESSING_TIMEOUT_DEADLINE = "payment-processing-deadline";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderSaga.class);
+
+    private String scheduleId;
 
     @StartSaga
     @SagaEventHandler(associationProperty = "orderId")
@@ -104,6 +114,16 @@ public class OrderSaga {
 
         LOGGER.info("O pagamento do usuário " + userPaymentDetails.getFirstName() + " foi encontrado com sucesso");
 
+        scheduleId = deadlineManager.schedule(Duration.of(120, ChronoUnit.SECONDS), PAYMENT_PROCESSING_TIMEOUT_DEADLINE, productReservedEvent);
+
+        //Somente para garantir que o deadlineManager será lançado
+        //remover após reste
+        // if(true) {
+        //     LOGGER.info("DeadlineManager foi iniciado para o orderId: " + productReservedEvent.getOrderId() + 
+        //                 " e productId: " + productReservedEvent.getProductId());
+        //     return;  
+        // }
+
         ProcessPaymentCommand proccessPaymentCommand = ProcessPaymentCommand.builder()
         		.orderId(productReservedEvent.getOrderId())
         		.paymentDetails(userPaymentDetails.getPaymentDetails())
@@ -113,7 +133,7 @@ public class OrderSaga {
         String result = null;
         
         try {
-            result = commandGateway.sendAndWait(proccessPaymentCommand, 10, TimeUnit.SECONDS);
+            result = commandGateway.sendAndWait(proccessPaymentCommand);
         } catch (Exception e) {
             LOGGER.error("Erro ao processar o pagamento: " + e.getMessage());
 
@@ -132,6 +152,8 @@ public class OrderSaga {
     }
 
     private void cancelProductReservation(ProductReservedEvent productReservedEvent, String reason) {
+
+        cancelDeadline();
 
         CancelProductReservationCommand publishProductReservationCommand = CancelProductReservationCommand.builder()
                 .productId(productReservedEvent.getProductId())
@@ -156,12 +178,23 @@ public class OrderSaga {
         // Aqui você pode adicionar lógica adicional para lidar com o pagamento processado,
         // como atualizar o status do pedido ou notificar outros serviços.
         
+        cancelDeadline();
+
         ApproveOrderCommand approveOrderCommand = new ApproveOrderCommand(paymentProcessedEvent.getOrderId());
         commandGateway.send(approveOrderCommand);
 
         // Finaliza o saga
         //SagaLifecycle.end();
 
+    }
+
+    private void cancelDeadline() {
+        if(scheduleId != null) {
+            LOGGER.info("Cancelando o deadline com ID: " + scheduleId);
+            deadlineManager.cancelSchedule(PAYMENT_PROCESSING_TIMEOUT_DEADLINE, scheduleId);
+            scheduleId = null;
+        }
+        
     }
 
     @EndSaga
@@ -210,6 +243,21 @@ public class OrderSaga {
         // Por exemplo, você pode confirmar a rejeição do pedido ou iniciar outras ações.
 
         LOGGER.info("OrderRejectedEvent foi chamado com sucesso para o pedido com ID: " + orderRejectedEvent.getOrderId());
+    }
+
+    @DeadlineHandler(deadlineName = PAYMENT_PROCESSING_TIMEOUT_DEADLINE)
+    public void handlePaymentDeadline(ProductReservedEvent productReservedEvent) {
+        // Esse método é chamado quando o deadline de processamento de pagamento expira
+        // e pode ser usado para lidar com o timeout do pagamento.
+
+        LOGGER.info("O deadline de processamento de pagamento expirou para o orderId: " + productReservedEvent.getOrderId() + 
+                    " e productId: " + productReservedEvent.getProductId());
+
+        // Aqui você pode adicionar lógica adicional para lidar com o timeout do pagamento,
+        // como cancelar a reserva do produto ou notificar outros serviços.
+        
+        cancelProductReservation(productReservedEvent, "O prazo para processar o pagamento expirou!");
+
     }
 
 }
