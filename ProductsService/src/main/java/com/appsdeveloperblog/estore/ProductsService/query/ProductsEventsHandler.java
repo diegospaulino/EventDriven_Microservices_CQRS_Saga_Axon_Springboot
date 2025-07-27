@@ -2,6 +2,7 @@ package com.appsdeveloperblog.estore.ProductsService.query;
 
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventhandling.ResetHandler;
 import org.axonframework.messaging.interceptors.ExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,5 +82,11 @@ public class ProductsEventsHandler {
         LOGGER.info("ProductReservationCancelledEvent foi chamado para o produto com productId: " + productReservationCancelledEvent.getProductId() + 
                     " e orderId: " + productReservationCancelledEvent.getOrderId());
         
+    }
+
+    @ResetHandler
+    public void reset() {
+        productsRepository.deleteAll();
+        LOGGER.info("Products repository has been reset.");
     }
 }
