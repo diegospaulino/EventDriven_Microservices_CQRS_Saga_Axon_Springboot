@@ -2,11 +2,15 @@ package com.appsdeveloperblog.estore.ProductsService;
 
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.config.EventProcessingConfigurer;
+import org.axonframework.eventsourcing.EventCountSnapshotTriggerDefinition;
+import org.axonframework.eventsourcing.SnapshotTriggerDefinition;
+import org.axonframework.eventsourcing.Snapshotter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
 import com.appsdeveloperblog.estore.ProductsService.command.interceptors.CreateProductCommandInterceptor;
@@ -44,4 +48,10 @@ public class ProductsServiceApplication {
 		// 		configure -> PropagatingErrorHandler.instance());
 	}
 
+	@Bean(name = "productSnapshotTriggerDefinition")
+	public SnapshotTriggerDefinition productSnapshotTriggerDefinition(Snapshotter snapshotter) {
+		// Método para definir o gatilho de snapshot
+		// Este método pode ser usado para configurar o comportamento do snapshot no Axon Framework
+		return new EventCountSnapshotTriggerDefinition(snapshotter, 3);
+	}
 }

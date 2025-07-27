@@ -15,6 +15,7 @@ public class PaymentAggregate {
     @AggregateIdentifier
     private String paymentId;
 
+    @SuppressWarnings("unused")
     private String orderId;
 
     public PaymentAggregate() {
